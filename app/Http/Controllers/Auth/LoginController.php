@@ -8,7 +8,7 @@ use Socialite;
 use Auth;
 use Exception;
 use App\User;
-use DB;
+use Redirect;
 
 class LoginController extends Controller
 {
@@ -68,6 +68,32 @@ class LoginController extends Controller
              return redirect('/home');
       }
              
+    }
+
+    public function redirectToFacebook()
+    {
+      return Socialite::driver('facebook')->redirect();
     }   
+
+
+
+    public function handleFacebookCallback()
+    {
+      $userSocial = Socialite::driver('facebook')->user();
+          //return $userSocial;
+          $finduser = User::where('facebook_id', $userSocial->id)->first();
+          if($finduser){
+              Auth::login($finduser);
+              return Redirect::to('/');
+          }else{
+          $new_user = User::create([
+                'name'      => $userSocial->name,
+                'email'      => $userSocial->email,
+                'facebook_id'=> $userSocial->id
+            ]);
+            Auth::login($new_user);
+            return redirect()->back();
+        }
+    }
  
 }
